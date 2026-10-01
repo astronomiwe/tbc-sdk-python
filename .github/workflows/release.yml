@@ -8,6 +8,11 @@ on:
         required: true
         default: false
         type: boolean
+      publish_pypi:
+        description: Publish the checked distributions to PyPI
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -64,3 +69,32 @@ jobs:
           python -m venv /tmp/testpypi-install
           /tmp/testpypi-install/bin/python -m pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ tbc-payments
           /tmp/testpypi-install/bin/python -c "import tbc_payments; print(tbc_payments.__version__)"
+
+  publish-pypi:
+    name: Publish to PyPI
+    needs: build
+    if: inputs.publish_pypi
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: python-package-distributions
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
+
+  test-pypi-install:
+    name: Install from PyPI
+    needs: publish-pypi
+    if: inputs.publish_pypi
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: |
+          python -m venv /tmp/pypi-install
+          /tmp/pypi-install/bin/python -m pip install tbc-payments
+          /tmp/pypi-install/bin/python -c "import tbc_payments; print(tbc_payments.__version__)"
