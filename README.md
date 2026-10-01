@@ -1,5 +1,7 @@
 # tbc-payments
 
+[![PyPI](https://img.shields.io/pypi/v/tbc-payments.svg)](https://pypi.org/project/tbc-payments/)
+
 `tbc-payments` is a small, typed Python client for [TBC Checkout](https://developers.tbcbank.ge/docs/checkout-api-overview). It helps a backend create a checkout session, redirect the customer to TBC's payment page, and later verify or manage the payment.
 
 It has synchronous and asynchronous clients with the same API. The package manages access tokens and HTTP connections; it never handles card details.
