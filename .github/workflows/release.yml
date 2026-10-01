@@ -1,0 +1,66 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish_testpypi:
+        description: Publish the checked distributions to TestPyPI
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build distributions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --upgrade build twine
+      - run: python -m build
+      - run: python -m twine check dist/*
+      - name: Install wheel in a clean environment
+        run: |
+          python -m venv /tmp/package-test
+          /tmp/package-test/bin/python -m pip install dist/*.whl
+          /tmp/package-test/bin/python -c "import tbc_payments; print(tbc_payments.__version__)"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+
+  publish-testpypi:
+    name: Publish to TestPyPI
+    needs: build
+    if: inputs.publish_testpypi
+    runs-on: ubuntu-latest
+    environment: testpypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+
+  test-testpypi-install:
+    name: Install from TestPyPI
+    needs: publish-testpypi
+    if: inputs.publish_testpypi
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: |
+          python -m venv /tmp/testpypi-install
+          /tmp/testpypi-install/bin/python -m pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ tbc-payments
+          /tmp/testpypi-install/bin/python -c "import tbc_payments; print(tbc_payments.__version__)"

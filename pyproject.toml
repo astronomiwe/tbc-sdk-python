@@ -29,6 +29,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "pytest-asyncio>=0.23", "ruff>=0.6"]
+release = ["build>=1.2", "twine>=5.1"]
 
 [project.urls]
 Documentation = "https://developers.tbcbank.ge/docs/checkout-api-overview"
