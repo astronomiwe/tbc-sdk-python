@@ -1,0 +1,49 @@
+name: Sandbox contract
+
+on:
+  schedule:
+    - cron: "17 3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  credentials:
+    runs-on: ubuntu-latest
+    outputs:
+      configured: ${{ steps.check.outputs.configured }}
+    steps:
+      - id: check
+        env:
+          TBC_SANDBOX_API_KEY: ${{ secrets.TBC_SANDBOX_API_KEY }}
+          TBC_SANDBOX_CLIENT_ID: ${{ secrets.TBC_SANDBOX_CLIENT_ID }}
+          TBC_SANDBOX_CLIENT_SECRET: ${{ secrets.TBC_SANDBOX_CLIENT_SECRET }}
+          TBC_SANDBOX_RETURN_URL: ${{ secrets.TBC_SANDBOX_RETURN_URL }}
+        run: |
+          if [ -n "$TBC_SANDBOX_API_KEY" ] && [ -n "$TBC_SANDBOX_CLIENT_ID" ] && [ -n "$TBC_SANDBOX_CLIENT_SECRET" ] && [ -n "$TBC_SANDBOX_RETURN_URL" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Sandbox contract test skipped: required secrets are not configured."
+          fi
+
+  contract:
+    needs: credentials
+    if: needs.credentials.outputs.configured == 'true'
+    runs-on: ubuntu-latest
+    environment: sandbox
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install .
+      - name: Create and retrieve a sandbox payment
+        env:
+          TBC_SANDBOX_API_KEY: ${{ secrets.TBC_SANDBOX_API_KEY }}
+          TBC_SANDBOX_CLIENT_ID: ${{ secrets.TBC_SANDBOX_CLIENT_ID }}
+          TBC_SANDBOX_CLIENT_SECRET: ${{ secrets.TBC_SANDBOX_CLIENT_SECRET }}
+          TBC_SANDBOX_RETURN_URL: ${{ secrets.TBC_SANDBOX_RETURN_URL }}
+        run: python scripts/sandbox_contract.py

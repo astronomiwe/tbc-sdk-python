@@ -7,6 +7,21 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-02
+
+### Added
+
+- Callback parsing through `parse_callback` and `TBCCallbackError`.
+- Optional FastAPI and Django callback adapters with runnable examples.
+- A weekly TBC sandbox contract workflow, enabled only when its credentials are configured.
+- MkDocs guides for payment lifecycle, callbacks, framework integration, advanced payments,
+  sandbox operations, and the public API.
+
+### Changed
+
+- Validate payment and recurring IDs, callback URLs, merchant payment IDs, and paired
+  split-payment correlation fields before sending an API request.
+
 ## [0.2.0] - 2026-10-02
 
 ### Added

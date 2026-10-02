@@ -8,6 +8,7 @@ from decimal import Decimal, InvalidOperation
 from enum import Enum, IntEnum
 from typing import Any
 
+from ._validation import require_absolute_http_url
 from .exceptions import TBCResponseError
 
 
@@ -137,8 +138,11 @@ class PaymentRequest:
     installment_products: tuple[InstallmentProduct, ...] = ()
 
     def __post_init__(self) -> None:
-        if not self.return_url.startswith(("https://", "http://")):
-            raise ValueError("return_url must be an absolute HTTP(S) URL")
+        require_absolute_http_url(self.return_url, "return_url")
+        if self.callback_url is not None:
+            require_absolute_http_url(self.callback_url, "callback_url")
+        if self.merchant_payment_id is not None and not self.merchant_payment_id.strip():
+            raise ValueError("merchant_payment_id cannot be empty")
         if self.expiration_minutes is not None and self.expiration_minutes <= 0:
             raise ValueError("expiration_minutes must be positive")
         if self.description is not None and len(self.description) > 30:

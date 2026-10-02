@@ -13,6 +13,13 @@ bandit -c pyproject.toml -r src
 pip-audit
 ```
 
+Build documentation before changing guides or examples:
+
+```bash
+python -m pip install -e '.[docs]'
+mkdocs build --strict
+```
+
 Keep the public API typed and backward-compatible within a minor release. Do not add automatic retries to money-moving requests: callers must be able to reconcile an ambiguous result safely.
 
 ## Releases

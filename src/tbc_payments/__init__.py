@@ -5,6 +5,7 @@ from .client import TBCClient
 from .exceptions import (
     TBCAPIError,
     TBCAuthenticationError,
+    TBCCallbackError,
     TBCError,
     TBCNetworkError,
     TBCResponseError,
@@ -20,6 +21,7 @@ from .models import (
     PaymentStatus,
     RecurringCard,
 )
+from .webhooks import parse_callback
 
 __all__ = [
     "Amount",
@@ -34,10 +36,12 @@ __all__ = [
     "RecurringCard",
     "TBCAPIError",
     "TBCAuthenticationError",
+    "TBCCallbackError",
     "TBCClient",
     "TBCError",
     "TBCNetworkError",
     "TBCResponseError",
+    "parse_callback",
 ]
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"

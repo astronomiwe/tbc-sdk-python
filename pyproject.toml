@@ -30,6 +30,9 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
   "bandit[toml]>=1.7.10",
+  "django>=4.2,<6",
+  "django-stubs>=5.0",
+  "fastapi>=0.110,<1",
   "mypy>=1.13",
   "pip-audit>=2.7",
   "pre-commit>=4",
@@ -38,10 +41,16 @@ dev = [
   "pytest-cov>=5",
   "ruff>=0.6",
 ]
+django = ["django>=4.2,<6"]
+fastapi = ["fastapi>=0.110,<1"]
+docs = ["mkdocs-material>=9.5,<10"]
 release = ["build>=1.2", "twine>=5.1"]
 
 [project.urls]
-Documentation = "https://developers.tbcbank.ge/docs/checkout-api-overview"
+Documentation = "https://github.com/astronomiwe/tbc-sdk-python/tree/master/docs"
+Repository = "https://github.com/astronomiwe/tbc-sdk-python"
+Issues = "https://github.com/astronomiwe/tbc-sdk-python/issues"
+"TBC Checkout API" = "https://developers.tbcbank.ge/docs/checkout-api-overview"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/tbc_payments"]

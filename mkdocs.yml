@@ -1,0 +1,15 @@
+site_name: tbc-payments
+site_description: Typed synchronous and asynchronous Python client for TBC Checkout.
+repo_url: https://github.com/astronomiwe/tbc-sdk-python
+repo_name: astronomiwe/tbc-sdk-python
+theme:
+  name: material
+  language: en
+nav:
+  - Overview: index.md
+  - Payment lifecycle: payment-lifecycle.md
+  - Callbacks and webhooks: callbacks.md
+  - Framework integrations: integrations.md
+  - Recurring payments and pre-authorisation: advanced-payments.md
+  - Sandbox and operations: sandbox.md
+  - API reference: api.md

@@ -18,6 +18,7 @@ from ._base import (
     retry_delay,
     should_retry_status,
 )
+from ._validation import require_identifier, validate_extra_pair
 from .exceptions import TBCNetworkError
 from .models import Amount, CompletionResult, Payment, PaymentRequest, _number
 
@@ -131,6 +132,7 @@ class TBCClient:
         return Payment.from_dict(self._request("POST", "/tpay/payments", json=request.to_dict()))
 
     def get_payment(self, pay_id: str) -> Payment:
+        pay_id = require_identifier(pay_id, "pay_id")
         return Payment.from_dict(self._request("GET", f"/tpay/payments/{pay_id}", retryable=True))
 
     def cancel_payment(
@@ -141,14 +143,15 @@ class TBCClient:
         extra: str | None = None,
         extra2: str | None = None,
     ) -> None:
+        pay_id = require_identifier(pay_id, "pay_id")
         body: dict[str, Any] = {} if amount is None else {"amount": _number(amount)}
-        if (extra is None) != (extra2 is None):
-            raise ValueError("extra and extra2 must be supplied together for split cancellation")
+        validate_extra_pair(extra, extra2, "split cancellation")
         if extra is not None:
             body.update({"extra": extra, "extra2": extra2})
         self._request("POST", f"/tpay/payments/{pay_id}/cancel", json=body)
 
     def complete_payment(self, pay_id: str, amount: Decimal | float | str) -> CompletionResult:
+        pay_id = require_identifier(pay_id, "pay_id")
         return CompletionResult.from_dict(
             pay_id,
             self._request(
@@ -157,6 +160,7 @@ class TBCClient:
         )
 
     def delete_recurring_payment(self, recurring_id: str) -> None:
+        recurring_id = require_identifier(recurring_id, "recurring_id")
         self._request("POST", f"/tpay/payments/{recurring_id}/delete", json={})
 
     def execute_recurring_payment(
@@ -170,6 +174,10 @@ class TBCClient:
         extra: str | None = None,
         extra2: str | None = None,
     ) -> Payment:
+        recurring_id = require_identifier(recurring_id, "recurring_id")
+        validate_extra_pair(extra, extra2, "recurring payment")
+        if merchant_payment_id is not None and not merchant_payment_id.strip():
+            raise ValueError("merchant_payment_id cannot be empty")
         body: dict[str, Any] = {
             "recId": recurring_id,
             "money": {"currency": amount.currency.value, "amount": _number(amount.total)},

@@ -6,6 +6,9 @@
 
 It has synchronous and asynchronous clients with the same API. The package manages access tokens and HTTP connections; it never handles card details.
 
+Full guides for callbacks, FastAPI, Django, recurring payments, sandbox operations, and
+the API are available in the [documentation](docs/index.md).
+
 ## What it supports
 
 - Creating and looking up Checkout payments.
@@ -65,6 +68,21 @@ async with AsyncTBCClient("api-key", "client-id", "client-secret", sandbox=True)
     )
 ```
 
+## FastAPI and Django
+
+Optional adapters validate callback request bodies without taking ownership of your
+application's client lifecycle or order database:
+
+```bash
+pip install "tbc-payments[fastapi]"
+# or
+pip install "tbc-payments[django]"
+```
+
+See the [framework guides](docs/integrations.md) and runnable
+[examples](examples/README.md). A callback is only a notification: fetch the payment
+from TBC and fulfil its order idempotently before returning HTTP 200.
+
 ## Installments and recurring payments
 
 Use `PaymentMethod.INSTALLMENT` with products whose total matches the payment amount:
@@ -100,6 +118,13 @@ ruff format --check .
 mypy
 bandit -c pyproject.toml -r src
 pip-audit
+```
+
+Build the local documentation site with:
+
+```bash
+python -m pip install -e '.[docs]'
+mkdocs serve
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md) for contribution and vulnerability-reporting guidance.

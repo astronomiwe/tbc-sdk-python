@@ -13,6 +13,10 @@ class TBCNetworkError(TBCError):
     """The API could not be reached or did not respond in time."""
 
 
+class TBCCallbackError(TBCError):
+    """A merchant callback payload does not contain a valid TBC payment ID."""
+
+
 class TBCResponseError(TBCError):
     """A successful TBC API response did not match the documented schema."""
 
