@@ -3,7 +3,7 @@ from unittest.mock import patch
 import httpx
 import pytest
 
-from tbc_payments import TBCAPIError, TBCAuthenticationError
+from tbc_payments import TBCAPIError, TBCAuthenticationError, TBCResponseError
 from tbc_payments._base import TBCConfig, parse_response, retry_delay, should_retry_status
 
 
@@ -22,7 +22,7 @@ def test_config_rejects_invalid_values(kwargs: dict[str, object]) -> None:
 
 def test_parse_response_handles_empty_and_non_json_success() -> None:
     assert parse_response(httpx.Response(204)) == {}
-    with pytest.raises(TBCAPIError, match="Expected JSON object"):
+    with pytest.raises(TBCResponseError, match="Expected JSON object"):
         parse_response(httpx.Response(200, json=["unexpected"]))
 
 

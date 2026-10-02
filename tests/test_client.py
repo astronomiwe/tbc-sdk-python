@@ -12,6 +12,7 @@ from tbc_payments import (
     PaymentRequest,
     TBCAPIError,
     TBCClient,
+    TBCResponseError,
 )
 
 
@@ -194,3 +195,30 @@ def test_get_retries_once_with_refreshed_token_after_unauthorized() -> None:
     with TBCClient("key", "id", "secret", transport=httpx.MockTransport(refresh_handler)) as client:
         assert client.get_payment("p-1").status == "Succeeded"
     assert received_tokens == ["Bearer expired", "Bearer fresh"]
+
+
+def test_sync_client_rejects_invalid_token_response() -> None:
+    def invalid_token_handler(request: httpx.Request) -> httpx.Response:
+        assert request.url.path.endswith("access-token")
+        return httpx.Response(200, json={"access_token": ""})
+
+    with (
+        TBCClient(
+            "key", "id", "secret", transport=httpx.MockTransport(invalid_token_handler)
+        ) as client,
+        pytest.raises(TBCResponseError, match="access_token"),
+    ):
+        client.create_payment(request())
+
+
+@pytest.mark.asyncio
+async def test_async_client_rejects_invalid_token_response() -> None:
+    def invalid_token_handler(request: httpx.Request) -> httpx.Response:
+        assert request.url.path.endswith("access-token")
+        return httpx.Response(200, json={"access_token": "token", "expires_in": 0})
+
+    async with AsyncTBCClient(
+        "key", "id", "secret", transport=httpx.MockTransport(invalid_token_handler)
+    ) as client:
+        with pytest.raises(TBCResponseError, match="expires_in"):
+            await client.create_payment(request())

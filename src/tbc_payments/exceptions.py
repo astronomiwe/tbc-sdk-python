@@ -13,6 +13,14 @@ class TBCNetworkError(TBCError):
     """The API could not be reached or did not respond in time."""
 
 
+class TBCResponseError(TBCError):
+    """A successful TBC API response did not match the documented schema."""
+
+    def __init__(self, message: str, payload: Any = None) -> None:
+        self.payload = payload
+        super().__init__(message)
+
+
 class TBCAPIError(TBCError):
     """An error response returned by TBC Checkout."""
 

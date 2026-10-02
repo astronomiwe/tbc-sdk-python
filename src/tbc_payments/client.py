@@ -10,7 +10,14 @@ from typing import Any
 import httpx
 from typing_extensions import Self
 
-from ._base import SANDBOX_URL, TBCConfig, parse_response, retry_delay, should_retry_status
+from ._base import (
+    SANDBOX_URL,
+    TBCConfig,
+    access_token_details,
+    parse_response,
+    retry_delay,
+    should_retry_status,
+)
 from .exceptions import TBCNetworkError
 from .models import Amount, CompletionResult, Payment, PaymentRequest, _number
 
@@ -115,12 +122,10 @@ class TBCClient:
                         auth=False,
                         retryable=True,
                     )
-                    self._token = result["access_token"]
+                    self._token, refresh_lifetime = access_token_details(result)
                     # TBC tokens are valid for one day; refresh 60 seconds early.
                     # Honour a supplied expiry.
-                    self._token_expires_at = time.monotonic() + max(
-                        1, int(result.get("expires_in", 86400)) - 60
-                    )
+                    self._token_expires_at = time.monotonic() + refresh_lifetime
 
     def create_payment(self, request: PaymentRequest) -> Payment:
         return Payment.from_dict(self._request("POST", "/tpay/payments", json=request.to_dict()))

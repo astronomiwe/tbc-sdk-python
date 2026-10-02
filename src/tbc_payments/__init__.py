@@ -2,7 +2,13 @@
 
 from .async_client import AsyncTBCClient
 from .client import TBCClient
-from .exceptions import TBCAPIError, TBCAuthenticationError, TBCError, TBCNetworkError
+from .exceptions import (
+    TBCAPIError,
+    TBCAuthenticationError,
+    TBCError,
+    TBCNetworkError,
+    TBCResponseError,
+)
 from .models import (
     Amount,
     CompletionResult,
@@ -31,6 +37,7 @@ __all__ = [
     "TBCClient",
     "TBCError",
     "TBCNetworkError",
+    "TBCResponseError",
 ]
 
 __version__ = "0.1.0"

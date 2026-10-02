@@ -6,7 +6,7 @@ from typing import Any
 
 import httpx
 
-from .exceptions import TBCAPIError, TBCAuthenticationError
+from .exceptions import TBCAPIError, TBCAuthenticationError, TBCResponseError
 
 BASE_URL = "https://api.tbcbank.ge/v1"
 SANDBOX_URL = "https://test-api.tbcbank.ge/v1"
@@ -41,8 +41,20 @@ def parse_response(response: httpx.Response) -> dict[str, Any]:
         error_cls = TBCAuthenticationError if response.status_code in (401, 403) else TBCAPIError
         raise error_cls(response.status_code, payload)
     if not isinstance(payload, dict):
-        raise TBCAPIError(response.status_code, {"detail": "Expected JSON object from TBC API"})
+        raise TBCResponseError("Expected JSON object from TBC API", payload)
     return payload
+
+
+def access_token_details(payload: dict[str, Any]) -> tuple[str, int]:
+    """Validate an access-token response and return its token and refresh lifetime."""
+    token = payload.get("access_token")
+    if not isinstance(token, str) or not token:
+        raise TBCResponseError("Token response is missing a non-empty access_token", payload)
+
+    expires_in = payload.get("expires_in", 86400)
+    if not isinstance(expires_in, int) or isinstance(expires_in, bool) or expires_in <= 0:
+        raise TBCResponseError("Token response has an invalid expires_in value", payload)
+    return token, max(1, expires_in - 60)
 
 
 def retry_delay(attempt: int) -> float:

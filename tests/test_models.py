@@ -4,12 +4,14 @@ import pytest
 
 from tbc_payments import (
     Amount,
+    CompletionResult,
     Currency,
     InstallmentProduct,
     Payment,
     PaymentMethod,
     PaymentRequest,
     RecurringCard,
+    TBCResponseError,
 )
 
 
@@ -114,3 +116,27 @@ def test_payment_response_parses_links_recurring_card_and_decimals() -> None:
     assert payment.returned_amount == Decimal("2.5")
     assert payment.recurring_card == RecurringCard("rec-1", "****1111", "1227")
     assert payment.rrn == "rrn-1"
+
+
+@pytest.mark.parametrize(
+    "response",
+    [
+        {"status": "Created"},
+        {"payId": "payment-1"},
+        {"payId": "payment-1", "status": "Created", "links": "invalid"},
+        {"payId": "payment-1", "status": "Created", "amount": "NaN"},
+        {
+            "payId": "payment-1",
+            "status": "Created",
+            "recurringCard": {"cardMask": "****1111"},
+        },
+    ],
+)
+def test_payment_response_validation_raises_public_error(response: dict[str, object]) -> None:
+    with pytest.raises(TBCResponseError):
+        Payment.from_dict(response)
+
+
+def test_completion_response_requires_status() -> None:
+    with pytest.raises(TBCResponseError, match="status"):
+        CompletionResult.from_dict("payment-1", {"amount": 1})

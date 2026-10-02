@@ -4,9 +4,31 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from enum import Enum, IntEnum
 from typing import Any
+
+from .exceptions import TBCResponseError
+
+
+def _required_string(data: dict[str, Any], field: str, response_name: str) -> str:
+    value = data.get(field)
+    if not isinstance(value, str) or not value:
+        raise TBCResponseError(f"{response_name} is missing a non-empty {field}", data)
+    return value
+
+
+def _optional_decimal(data: dict[str, Any], field: str) -> Decimal | None:
+    value = data.get(field)
+    if value is None:
+        return None
+    try:
+        decimal = Decimal(str(value))
+    except (InvalidOperation, ValueError) as exc:
+        raise TBCResponseError(f"Response has an invalid {field} amount", data) from exc
+    if not decimal.is_finite():
+        raise TBCResponseError(f"Response has an invalid {field} amount", data)
+    return decimal
 
 
 class Currency(str, Enum):
@@ -197,7 +219,9 @@ class RecurringCard:
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> RecurringCard:
         return cls(
-            data["recId"], data.get("cardMask"), data.get("expiryDate") or data.get("expirtyDate")
+            _required_string(data, "recId", "Recurring card response"),
+            data.get("cardMask"),
+            data.get("expiryDate") or data.get("expirtyDate"),
         )
 
 
@@ -216,15 +240,11 @@ class CompletionResult:
 
     @classmethod
     def from_dict(cls, pay_id: str, data: dict[str, Any]) -> CompletionResult:
-        def decimal_value(name: str) -> Decimal | None:
-            value = data.get(name)
-            return Decimal(str(value)) if value is not None else None
-
         return cls(
             pay_id,
-            data["status"],
-            decimal_value("amount"),
-            decimal_value("confirmedAmount"),
+            _required_string(data, "status", "Completion response"),
+            _optional_decimal(data, "amount"),
+            _optional_decimal(data, "confirmedAmount"),
             data.get("httpStatusCode"),
             data.get("developerMessage"),
             data.get("userMessage"),
@@ -257,28 +277,35 @@ class Payment:
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Payment:
-        links = tuple(
-            PaymentLink(link["uri"], link["method"], link["rel"])
-            for link in (data.get("links") or [])
-        )
-        amount = data.get("amount")
-
-        def decimal_value(key: str) -> Decimal | None:
-            value = data.get(key)
-            return Decimal(str(value)) if value is not None else None
+        raw_links = data.get("links") or []
+        if not isinstance(raw_links, list):
+            raise TBCResponseError("Payment response has invalid links", data)
+        links: list[PaymentLink] = []
+        for link in raw_links:
+            if not isinstance(link, dict):
+                raise TBCResponseError("Payment response has invalid link data", data)
+            links.append(
+                PaymentLink(
+                    _required_string(link, "uri", "Payment link"),
+                    _required_string(link, "method", "Payment link"),
+                    _required_string(link, "rel", "Payment link"),
+                )
+            )
 
         recurring_card = data.get("recurringCard")
+        if recurring_card is not None and not isinstance(recurring_card, dict):
+            raise TBCResponseError("Payment response has invalid recurringCard data", data)
         return cls(
-            data["payId"],
-            data["status"],
-            Decimal(str(amount)) if amount is not None else None,
+            _required_string(data, "payId", "Payment response"),
+            _required_string(data, "status", "Payment response"),
+            _optional_decimal(data, "amount"),
             data.get("currency"),
-            links,
+            tuple(links),
             data.get("transactionId"),
             data.get("recId"),
             data.get("preAuth"),
-            decimal_value("confirmedAmount"),
-            decimal_value("returnedAmount"),
+            _optional_decimal(data, "confirmedAmount"),
+            _optional_decimal(data, "returnedAmount"),
             data.get("paymentMethod"),
             RecurringCard.from_dict(recurring_card) if recurring_card else None,
             data.get("rrn") or data.get("RRN"),
