@@ -1,13 +1,17 @@
 # tbc-payments
 
 [![PyPI](https://img.shields.io/pypi/v/tbc-payments.svg)](https://pypi.org/project/tbc-payments/)
+[![Python](https://img.shields.io/pypi/pyversions/tbc-payments.svg)](https://pypi.org/project/tbc-payments/)
+[![CI](https://github.com/astronomiwe/tbc-sdk-python/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/astronomiwe/tbc-sdk-python/actions/workflows/ci.yml)
+[![Documentation](https://github.com/astronomiwe/tbc-sdk-python/actions/workflows/docs.yml/badge.svg?branch=master)](https://astronomiwe.github.io/tbc-sdk-python/)
+[![License](https://img.shields.io/pypi/l/tbc-payments.svg)](LICENSE)
 
 `tbc-payments` is a small, typed Python client for [TBC Checkout](https://developers.tbcbank.ge/docs/checkout-api-overview). It helps a backend create a checkout session, redirect the customer to TBC's payment page, and later verify or manage the payment.
 
 It has synchronous and asynchronous clients with the same API. The package manages access tokens and HTTP connections; it never handles card details.
 
 Full guides for callbacks, FastAPI, Django, recurring payments, sandbox operations, and
-the API are available in the [documentation](docs/index.md).
+the API are available in the [documentation](https://astronomiwe.github.io/tbc-sdk-python/).
 
 ## What it supports
 
