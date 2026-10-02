@@ -7,6 +7,20 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-10-02
+
+### Added
+
+- Dependabot updates for Python packages, pre-commit hooks, and GitHub Actions.
+- `zizmor` checks for GitHub Actions workflow security.
+- Contribution setup and release checklist, plus three newcomer-friendly GitHub issues.
+
+### Changed
+
+- Publish absolute documentation links and package badges in the PyPI README.
+- Pin GitHub Actions to immutable commit SHAs and narrow workflow credentials.
+- Ignore local `.env` files to prevent accidental credential commits.
+
 ## [0.3.0] - 2026-10-02
 
 ### Added
