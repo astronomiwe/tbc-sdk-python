@@ -222,3 +222,80 @@ async def test_async_client_rejects_invalid_token_response() -> None:
     ) as client:
         with pytest.raises(TBCResponseError, match="expires_in"):
             await client.create_payment(request())
+
+
+INVALID_PAYMENT_RESPONSES = [
+    pytest.param(
+        {"payId": "p-1", "status": "Created", "links": [None]}, "link data", id="non-object-link"
+    ),
+    pytest.param(
+        {
+            "payId": "p-1",
+            "status": "Created",
+            "links": [{"method": "REDIRECT", "rel": "approval_url"}],
+        },
+        "uri",
+        id="missing-link-uri",
+    ),
+    pytest.param(
+        {"payId": "p-1", "status": "Created", "recurringCard": "invalid"},
+        "recurringCard",
+        id="non-object-card",
+    ),
+    pytest.param(
+        {"payId": "p-1", "status": "Created", "confirmedAmount": "Infinity"},
+        "confirmedAmount",
+        id="non-finite-confirmed-amount",
+    ),
+    pytest.param(
+        {"payId": "p-1", "status": "Created", "returnedAmount": "invalid"},
+        "returnedAmount",
+        id="invalid-returned-amount",
+    ),
+    pytest.param({"payId": 42, "status": "Created"}, "payId", id="non-string-id"),
+]
+
+
+@pytest.mark.parametrize(("payload", "message"), INVALID_PAYMENT_RESPONSES)
+def test_sync_malformed_payment_response_is_structured(
+    payload: dict[str, object], message: str
+) -> None:
+    calls: list[str] = []
+
+    def malformed_handler(http_request: httpx.Request) -> httpx.Response:
+        calls.append(http_request.url.path)
+        if http_request.url.path.endswith("access-token"):
+            return httpx.Response(200, json={"access_token": "token"})
+        return httpx.Response(200, json=payload)
+
+    with (
+        TBCClient(
+            "key", "id", "secret", transport=httpx.MockTransport(malformed_handler)
+        ) as client,
+        pytest.raises(TBCResponseError, match=message) as error,
+    ):
+        client.create_payment(request())
+    assert error.value.payload == (payload["links"][0] if message == "uri" else payload)
+    assert len(calls) == 2  # Token request, then exactly one money-moving request.
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(("payload", "message"), INVALID_PAYMENT_RESPONSES)
+async def test_async_malformed_payment_response_is_structured(
+    payload: dict[str, object], message: str
+) -> None:
+    calls: list[str] = []
+
+    def malformed_handler(http_request: httpx.Request) -> httpx.Response:
+        calls.append(http_request.url.path)
+        if http_request.url.path.endswith("access-token"):
+            return httpx.Response(200, json={"access_token": "token"})
+        return httpx.Response(200, json=payload)
+
+    async with AsyncTBCClient(
+        "key", "id", "secret", transport=httpx.MockTransport(malformed_handler)
+    ) as client:
+        with pytest.raises(TBCResponseError, match=message) as error:
+            await client.create_payment(request())
+    assert error.value.payload == (payload["links"][0] if message == "uri" else payload)
+    assert len(calls) == 2
