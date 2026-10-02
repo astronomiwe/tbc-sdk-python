@@ -7,6 +7,13 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-10-02
+
+### Changed
+
+- Update Ruff and zizmor pre-commit hooks.
+- Update immutable GitHub Pages deployment Actions.
+
 ## [0.3.1] - 2026-10-02
 
 ### Added
