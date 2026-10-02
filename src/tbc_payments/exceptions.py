@@ -20,7 +20,9 @@ class TBCAPIError(TBCError):
         self.status_code = status_code
         self.payload = payload
         if isinstance(payload, dict):
-            message = payload.get("developerMessage") or payload.get("detail") or payload.get("title")
+            message = (
+                payload.get("developerMessage") or payload.get("detail") or payload.get("title")
+            )
         else:
             message = None
         super().__init__(message or f"TBC API returned HTTP {status_code}")

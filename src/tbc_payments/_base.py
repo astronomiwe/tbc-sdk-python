@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import random
+import secrets
 from dataclasses import dataclass
 from typing import Any
 
@@ -46,7 +46,7 @@ def parse_response(response: httpx.Response) -> dict[str, Any]:
 
 
 def retry_delay(attempt: int) -> float:
-    return min(2.0, 0.25 * (2**attempt)) + random.uniform(0, 0.1)
+    return float(min(2.0, 0.25 * (2**attempt)) + secrets.randbelow(101) / 1000)
 
 
 def should_retry_status(status: int) -> bool:

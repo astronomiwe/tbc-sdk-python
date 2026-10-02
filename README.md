@@ -93,8 +93,13 @@ For saved cards, enable `save_card=True` when creating the initial payment and s
 
 ```bash
 python -m pip install -e '.[dev]'
+pre-commit install
 pytest
 ruff check .
+ruff format --check .
+mypy
+bandit -c pyproject.toml -r src
+pip-audit
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md) for contribution and vulnerability-reporting guidance.

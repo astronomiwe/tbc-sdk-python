@@ -37,11 +37,12 @@ class PaymentStatus(str, Enum):
     PARTIAL_RETURNED = "PartialReturned"
 
 
-def _number(value: Decimal | float | str) -> float:
+def _number(value: Decimal | int | float | str) -> float:
     amount = Decimal(str(value))
     if not amount.is_finite() or amount < 0:
         raise ValueError("Amount must be a finite, non-negative number")
-    if amount.as_tuple().exponent < -2:
+    exponent = amount.as_tuple().exponent
+    if isinstance(exponent, int) and exponent < -2:
         raise ValueError("Amount cannot have more than two decimal places")
     return float(amount.quantize(Decimal("0.01")))
 
@@ -64,7 +65,11 @@ class Amount:
 
     def to_dict(self) -> dict[str, Any]:
         result: dict[str, Any] = {"currency": self.currency.value, "total": _number(self.total)}
-        for field_name, api_name in (("subtotal", "subTotal"), ("tax", "tax"), ("shipping", "shipping")):
+        for field_name, api_name in (
+            ("subtotal", "subTotal"),
+            ("tax", "tax"),
+            ("shipping", "shipping"),
+        ):
             value = getattr(self, field_name)
             if value is not None:
                 result[api_name] = _number(value)
@@ -135,11 +140,16 @@ class PaymentRequest:
             raise ValueError("installment payments are available only in GEL")
         if self.installment_products:
             products_total = sum(
-                Decimal(str(item.price)) * item.quantity for item in self.installment_products
+                (Decimal(str(item.price)) * item.quantity for item in self.installment_products),
+                start=Decimal("0"),
             ).quantize(Decimal("0.01"))
             if products_total != Decimal(str(self.amount.total)).quantize(Decimal("0.01")):
                 raise ValueError("installment product total must equal payment total")
-        incompatible_with_save_card = {PaymentMethod.WEB_QR_BNPL, PaymentMethod.INSTALLMENT, PaymentMethod.APPLE_PAY}
+        incompatible_with_save_card = {
+            PaymentMethod.WEB_QR_BNPL,
+            PaymentMethod.INSTALLMENT,
+            PaymentMethod.APPLE_PAY,
+        }
         if self.save_card and incompatible_with_save_card.intersection(self.methods):
             raise ValueError("save_card is incompatible with Web QR, installment, and Apple Pay")
         if Decimal(str(self.amount.total)) == 0 and not self.save_card:
@@ -148,17 +158,26 @@ class PaymentRequest:
     def to_dict(self) -> dict[str, Any]:
         data: dict[str, Any] = {"amount": self.amount.to_dict(), "returnurl": self.return_url}
         fields = {
-            "callbackUrl": self.callback_url, "merchantPaymentId": self.merchant_payment_id,
-            "description": self.description, "expirationMinutes": self.expiration_minutes,
-            "preAuth": self.pre_auth, "saveCard": self.save_card, "saveCardToDate": self.save_card_to_date,
-            "language": self.language, "userIpAddress": self.user_ip_address, "extra": self.extra, "extra2": self.extra2,
+            "callbackUrl": self.callback_url,
+            "merchantPaymentId": self.merchant_payment_id,
+            "description": self.description,
+            "expirationMinutes": self.expiration_minutes,
+            "preAuth": self.pre_auth,
+            "saveCard": self.save_card,
+            "saveCardToDate": self.save_card_to_date,
+            "language": self.language,
+            "userIpAddress": self.user_ip_address,
+            "extra": self.extra,
+            "extra2": self.extra2,
             "skipInfoMessage": self.skip_info_message,
         }
         data.update({key: value for key, value in fields.items() if value is not None})
         if self.methods:
             data["methods"] = [int(method) for method in self.methods]
         if self.installment_products:
-            data["installmentProducts"] = [product.to_dict() for product in self.installment_products]
+            data["installmentProducts"] = [
+                product.to_dict() for product in self.installment_products
+            ]
         return data
 
 
@@ -177,7 +196,9 @@ class RecurringCard:
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> RecurringCard:
-        return cls(data["recId"], data.get("cardMask"), data.get("expiryDate") or data.get("expirtyDate"))
+        return cls(
+            data["recId"], data.get("cardMask"), data.get("expiryDate") or data.get("expirtyDate")
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -198,8 +219,17 @@ class CompletionResult:
         def decimal_value(name: str) -> Decimal | None:
             value = data.get(name)
             return Decimal(str(value)) if value is not None else None
-        return cls(pay_id, data["status"], decimal_value("amount"), decimal_value("confirmedAmount"),
-                   data.get("httpStatusCode"), data.get("developerMessage"), data.get("userMessage"), data)
+
+        return cls(
+            pay_id,
+            data["status"],
+            decimal_value("amount"),
+            decimal_value("confirmedAmount"),
+            data.get("httpStatusCode"),
+            data.get("developerMessage"),
+            data.get("userMessage"),
+            data,
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -227,12 +257,31 @@ class Payment:
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Payment:
-        links = tuple(PaymentLink(**link) for link in (data.get("links") or []))
+        links = tuple(
+            PaymentLink(link["uri"], link["method"], link["rel"])
+            for link in (data.get("links") or [])
+        )
         amount = data.get("amount")
-        decimal_value = lambda key: Decimal(str(data[key])) if data.get(key) is not None else None
+
+        def decimal_value(key: str) -> Decimal | None:
+            value = data.get(key)
+            return Decimal(str(value)) if value is not None else None
+
         recurring_card = data.get("recurringCard")
-        return cls(data["payId"], data["status"], Decimal(str(amount)) if amount is not None else None,
-                   data.get("currency"), links, data.get("transactionId"), data.get("recId"),
-                   data.get("preAuth"), decimal_value("confirmedAmount"), decimal_value("returnedAmount"),
-                   data.get("paymentMethod"), RecurringCard.from_dict(recurring_card) if recurring_card else None,
-                   data.get("rrn") or data.get("RRN"), data.get("resultCode"), data)
+        return cls(
+            data["payId"],
+            data["status"],
+            Decimal(str(amount)) if amount is not None else None,
+            data.get("currency"),
+            links,
+            data.get("transactionId"),
+            data.get("recId"),
+            data.get("preAuth"),
+            decimal_value("confirmedAmount"),
+            decimal_value("returnedAmount"),
+            data.get("paymentMethod"),
+            RecurringCard.from_dict(recurring_card) if recurring_card else None,
+            data.get("rrn") or data.get("RRN"),
+            data.get("resultCode"),
+            data,
+        )
