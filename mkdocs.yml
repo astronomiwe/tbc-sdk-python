@@ -11,6 +11,7 @@ nav:
   - Payment lifecycle: payment-lifecycle.md
   - Callbacks and webhooks: callbacks.md
   - Framework integrations: integrations.md
+  - Django class-based callback view: django-callback.md
   - Recurring payments and pre-authorisation: advanced-payments.md
   - Sandbox and operations: sandbox.md
   - API reference: api.md
