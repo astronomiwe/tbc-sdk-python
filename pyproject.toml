@@ -47,7 +47,7 @@ docs = ["mkdocs-material>=9.5,<10"]
 release = ["build>=1.2", "twine>=5.1"]
 
 [project.urls]
-Documentation = "https://github.com/astronomiwe/tbc-sdk-python/tree/master/docs"
+Documentation = "https://astronomiwe.github.io/tbc-sdk-python/"
 Repository = "https://github.com/astronomiwe/tbc-sdk-python"
 Issues = "https://github.com/astronomiwe/tbc-sdk-python/issues"
 "TBC Checkout API" = "https://developers.tbcbank.ge/docs/checkout-api-overview"

@@ -1,5 +1,6 @@
 site_name: tbc-payments
 site_description: Typed synchronous and asynchronous Python client for TBC Checkout.
+site_url: https://astronomiwe.github.io/tbc-sdk-python/
 repo_url: https://github.com/astronomiwe/tbc-sdk-python
 repo_name: astronomiwe/tbc-sdk-python
 theme:

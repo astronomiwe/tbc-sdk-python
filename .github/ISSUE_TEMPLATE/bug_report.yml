@@ -1,0 +1,42 @@
+name: Bug report
+description: Report a reproducible problem in tbc-payments.
+title: "bug: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: "Never include API keys, client secrets, access tokens, card data, or customer data."
+  - type: input
+    id: version
+    attributes:
+      label: tbc-payments version
+      placeholder: "0.3.0"
+    validations:
+      required: true
+  - type: input
+    id: python
+    attributes:
+      label: Python version
+      placeholder: "3.12.0"
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour and traceback
+      description: "Redact all credentials and personal data."
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: "Use mocked HTTP responses where possible."
+    validations:
+      required: true
