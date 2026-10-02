@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "tbc-payments"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Typed synchronous and asynchronous client for TBC Checkout payments."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -45,6 +45,9 @@ Documentation = "https://developers.tbcbank.ge/docs/checkout-api-overview"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/tbc_payments"]
+
+[tool.hatch.version]
+path = "src/tbc_payments/__init__.py"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
