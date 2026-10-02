@@ -7,6 +7,10 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- Exempt the Django callback examples from CSRF checks so TBC callbacks are not rejected with HTTP 403.
+
 ## [0.3.2] - 2026-10-02
 
 ### Changed

@@ -5,12 +5,14 @@ from __future__ import annotations
 import os
 
 from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from tbc_payments import TBCCallbackError, TBCClient
 from tbc_payments.integrations.django import payment_id_from_request
 
 
+@csrf_exempt
 @require_POST
 def tbc_callback(request: HttpRequest) -> HttpResponse:
     try:
