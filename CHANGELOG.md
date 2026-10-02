@@ -7,6 +7,16 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-02
+
+### Added
+
+- `TBCResponseError` for successful API responses that do not match the documented schema.
+
+### Changed
+
+- Validate access-token, payment, completion, recurring-card, and payment-link response data.
+
 ## [0.1.0] - 2026-10-01
 
 ### Added
