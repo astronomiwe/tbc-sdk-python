@@ -1,7 +1,7 @@
 # Django class-based callback view
 
 A copy-pasteable Django class-based view that receives a TBC callback, confirms the
-payment with TBC, and fulfils the order exactly once.
+payment with TBC, and schedules idempotent fulfilment.
 
 ```bash
 pip install "tbc-payments[django]"
@@ -94,7 +94,8 @@ not signed, so anyone can post one. The view therefore fetches the payment with
 deliveries can arrive at the same time. The conditional `UPDATE ... WHERE paid_at IS
 NULL` runs atomically in the database, so exactly one request gets `marked == 1` and
 schedules fulfilment. Repeated callbacks update zero rows and do nothing. Keep
-`tbc_pay_id` unique so one payment can never match two orders.
+`tbc_pay_id` unique so one payment can never match two orders. A task queue may still
+retry `fulfil_order`, so make the task itself idempotent as well.
 
 **Prompt HTTP 200.** The view does one TBC lookup and one database update, then returns
 HTTP 200. Slow work such as emails or stock changes runs in `fulfil_order`, outside the
