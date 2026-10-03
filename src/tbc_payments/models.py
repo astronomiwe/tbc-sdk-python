@@ -108,6 +108,8 @@ class InstallmentProduct:
     name: str | None = None
 
     def __post_init__(self) -> None:
+        if isinstance(self.quantity, bool) or not isinstance(self.quantity, int):
+            raise TypeError("installment product quantity must be an integer")
         if self.quantity <= 0:
             raise ValueError("installment product quantity must be positive")
 
@@ -147,6 +149,11 @@ class PaymentRequest:
             raise ValueError("expiration_minutes must be positive")
         if self.description is not None and len(self.description) > 30:
             raise ValueError("description cannot exceed 30 characters")
+        for method in self.methods:
+            if not isinstance(method, PaymentMethod):
+                raise TypeError(
+                    f"methods must be PaymentMethod enum members, got {type(method).__name__}"
+                )
         if len(set(self.methods)) != len(self.methods):
             raise ValueError("methods must not contain duplicates")
         if self.language is not None and self.language not in {"KA", "EN"}:
