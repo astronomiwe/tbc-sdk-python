@@ -56,3 +56,6 @@ def tbc_callback(request: HttpRequest) -> HttpResponse:
         pass
     return HttpResponse(status=200)
 ```
+
+For a class-based view with idempotent fulfilment, see the
+[Django class-based callback view](django-callback.md) recipe.
