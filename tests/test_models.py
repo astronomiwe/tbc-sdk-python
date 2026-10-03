@@ -38,6 +38,23 @@ def test_installment_product_requires_positive_quantity() -> None:
         InstallmentProduct("1", 0)
 
 
+@pytest.mark.parametrize("quantity", [True, False])
+def test_installment_product_rejects_boolean_quantity(quantity: bool) -> None:
+    with pytest.raises(TypeError, match="integer"):
+        InstallmentProduct("1", quantity)
+
+
+def test_installment_product_rejects_float_quantity() -> None:
+    with pytest.raises(TypeError, match="integer"):
+        InstallmentProduct("1", 1.5)
+
+
+def test_installment_product_accepts_positive_integer_quantity() -> None:
+    product = InstallmentProduct("1", 1)
+    assert product.quantity == 1
+    assert product.to_dict() == {"price": 1.0, "quantity": 1}
+
+
 def test_payment_request_serializes_all_optional_fields() -> None:
     request = PaymentRequest(
         amount=Amount("10"),
@@ -92,6 +109,21 @@ def test_payment_request_rejects_invalid_optional_fields(
 ) -> None:
     with pytest.raises(ValueError, match=message):
         PaymentRequest(Amount("1"), "https://merchant.example/return", **kwargs)
+
+
+@pytest.mark.parametrize("invalid_method", [999, 0, -1, 3.14, "CARD", None])
+def test_payment_request_rejects_invalid_payment_method(invalid_method: object) -> None:
+    with pytest.raises(TypeError, match="PaymentMethod"):
+        PaymentRequest(Amount("1"), "https://merchant.example/return", methods=(invalid_method,))  # type: ignore[arg-type]
+
+
+def test_payment_request_accepts_valid_payment_method_enum_member() -> None:
+    request = PaymentRequest(
+        amount=Amount("10"),
+        return_url="https://merchant.example/return",
+        methods=(PaymentMethod.CARD, PaymentMethod.APPLE_PAY),
+    )
+    assert request.methods == (PaymentMethod.CARD, PaymentMethod.APPLE_PAY)
 
 
 def test_payment_response_parses_links_recurring_card_and_decimals() -> None:
