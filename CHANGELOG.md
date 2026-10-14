@@ -9,6 +9,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Exercise the runnable Django callback with enforced CSRF middleware and mocked payment lookups.
+
 - Document a Django class-based callback view recipe.
 
 ### Fixed
